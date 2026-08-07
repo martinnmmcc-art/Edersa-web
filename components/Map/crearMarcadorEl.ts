@@ -2,7 +2,7 @@ import { COLOR_ESTADO, ICONO_TIPO } from "@/lib/estado";
 import type { ElementoEstado } from "@/types";
 
 /**
- * Construye el <div> que Mapbox usa como marcador custom.
+ * Construye el <div> que MapLibre usa como marcador custom.
  * Se separa de MapView para poder testear/ajustar el look sin tocar
  * la lógica de mapa.
  */

@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
+import maplibregl from "maplibre-gl";
 
 // Centro por defecto: El Bolsón, Río Negro, Argentina
 const EL_BOLSON_CENTER: [number, number] = [-71.5321, -41.9622];
 const DEFAULT_ZOOM = 13;
+
+// OpenFreeMap: estilos de mapa vectorial gratuitos, sin token ni límite de
+// uso (https://openfreemap.org). "Liberty" es un estilo tipo calle, buena
+// legibilidad. Si en algún momento se quiere autohospedar el tile server
+// (por control total / uso muy intensivo), OpenFreeMap también permite
+// bajar los tiles y correrlos propios sin cambiar el resto del código.
+const ESTILO_MAPA = "https://tiles.openfreemap.org/styles/liberty";
 
 interface UseMapOptions {
   containerId: string;
@@ -14,7 +21,7 @@ interface UseMapOptions {
 }
 
 /**
- * Hook responsable únicamente del ciclo de vida del mapa Mapbox:
+ * Hook responsable únicamente del ciclo de vida del mapa (MapLibre GL):
  * lo crea, lo destruye al desmontar, y expone `map` cuando está listo.
  * No sabe nada de elementos ni de estado eléctrico: eso vive en los
  * componentes que consumen `map`.
@@ -24,34 +31,31 @@ export function useMap({
   center = EL_BOLSON_CENTER,
   zoom = DEFAULT_ZOOM,
 }: UseMapOptions) {
-  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
   const [mapListo, setMapListo] = useState(false);
   const [errorMapa, setErrorMapa] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-    if (!token) {
-      setErrorMapa(
-        "Falta NEXT_PUBLIC_MAPBOX_TOKEN. Configuralo en .env.local / Vercel."
-      );
-      return;
-    }
-    mapboxgl.accessToken = token;
-
     const el = document.getElementById(containerId);
     if (!el || mapRef.current) return;
 
-    const map = new mapboxgl.Map({
-      container: containerId,
-      style: "mapbox://styles/mapbox/dark-v11", // buena legibilidad en campo / bajo luz
-      center,
-      zoom,
-      attributionControl: true,
-    });
+    let map: maplibregl.Map;
+    try {
+      map = new maplibregl.Map({
+        container: containerId,
+        style: ESTILO_MAPA,
+        center,
+        zoom,
+        attributionControl: true,
+      });
+    } catch (err: any) {
+      setErrorMapa(err?.message ?? "No se pudo inicializar el mapa.");
+      return;
+    }
 
-    map.addControl(new mapboxgl.NavigationControl(), "top-right");
+    map.addControl(new maplibregl.NavigationControl(), "top-right");
     map.addControl(
-      new mapboxgl.GeolocateControl({
+      new maplibregl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
         trackUserLocation: true,
         showUserHeading: true,
@@ -60,6 +64,11 @@ export function useMap({
     );
 
     map.on("load", () => setMapListo(true));
+    map.on("error", (e) => {
+      // errores de tile server / red se reportan acá en vez de romper la UI
+      // eslint-disable-next-line no-console
+      console.error("[mapa] error", e?.error ?? e);
+    });
 
     mapRef.current = map;
 

@@ -1,0 +1,37 @@
+@import "mapbox-gl/dist/mapbox-gl.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  height: 100%;
+  overscroll-behavior: none; /* evita el "pull to refresh" accidental en campo */
+}
+
+body {
+  @apply bg-panel text-slate-100 font-body;
+}
+
+/* Popup de Mapbox con la estética del tablero (por defecto viene blanco) */
+.mapboxgl-popup-content {
+  @apply bg-panel-raised text-slate-100 rounded-lg shadow-xl border border-panel-border p-0;
+}
+.mapboxgl-popup-tip {
+  border-top-color: #1b232d !important;
+}
+.mapboxgl-ctrl-group {
+  @apply !bg-panel-raised;
+}
+
+/* Foco de teclado visible (accesibilidad, uso con guantes + teclado externo) */
+:focus-visible {
+  outline: 3px solid #ffb100;
+  outline-offset: 2px;
+}
+
+@layer components {
+  .campo-input {
+    @apply h-touch rounded-lg bg-panel border border-panel-border text-slate-100 px-3 text-base;
+  }
+}

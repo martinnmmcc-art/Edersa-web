@@ -46,7 +46,6 @@ export function useMap({
         style: ESTILO_MAPA,
         center,
         zoom,
-        attributionControl: true,
       });
     } catch (err: any) {
       setErrorMapa(err?.message ?? "No se pudo inicializar el mapa.");

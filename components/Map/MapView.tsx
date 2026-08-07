@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import mapboxgl from "mapbox-gl";
+import maplibregl from "maplibre-gl";
 import { useMap } from "@/hooks/useMap";
 import { crearMarcadorEl } from "./crearMarcadorEl";
 import type { ElementoEstado } from "@/types";
@@ -13,7 +13,7 @@ interface MapViewProps {
   onClickMapa?: (coords: { lat: number; lng: number }) => void;
 }
 
-const CONTAINER_ID = "edersa-mapbox-container";
+const CONTAINER_ID = "edersa-map-container";
 
 export function MapView({
   elementos,
@@ -22,11 +22,11 @@ export function MapView({
   onClickMapa,
 }: MapViewProps) {
   const { map, mapListo, errorMapa } = useMap({ containerId: CONTAINER_ID });
-  const marcadoresRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
+  const marcadoresRef = useRef<Map<string, maplibregl.Marker>>(new Map());
 
   useEffect(() => {
     if (!map || !mapListo || !onClickMapa) return;
-    const handler = (e: mapboxgl.MapMouseEvent) => {
+    const handler = (e: maplibregl.MapMouseEvent) => {
       onClickMapa({ lat: e.lngLat.lat, lng: e.lngLat.lng });
     };
     map.on("click", handler);
@@ -56,7 +56,7 @@ export function MapView({
       const seleccionado = elemento.id === elementoSeleccionadoId;
       const existente = marcadoresRef.current.get(elemento.id);
 
-      // mapboxgl.Marker no permite reemplazar su elemento DOM en caliente
+      // maplibregl.Marker no permite reemplazar su elemento DOM en caliente
       // de forma confiable (guarda la referencia interna), así que ante
       // cualquier cambio de apariencia (estado, selección) se recrea el
       // marcador. Es barato: son decenas de elementos, no miles.
@@ -68,7 +68,7 @@ export function MapView({
       const el = crearMarcadorEl(elemento, seleccionado);
       el.onclick = () => onSeleccionarElemento(elemento);
 
-      const marker = new mapboxgl.Marker({ element: el })
+      const marker = new maplibregl.Marker({ element: el })
         .setLngLat([elemento.lng, elemento.lat])
         .addTo(map);
 

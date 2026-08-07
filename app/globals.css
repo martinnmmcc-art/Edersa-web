@@ -1,4 +1,4 @@
-@import "mapbox-gl/dist/mapbox-gl.css";
+@import "maplibre-gl/dist/maplibre-gl.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,14 +13,14 @@ body {
   @apply bg-panel text-slate-100 font-body;
 }
 
-/* Popup de Mapbox con la estética del tablero (por defecto viene blanco) */
-.mapboxgl-popup-content {
+/* Popup del mapa (MapLibre) con la estética del tablero (por defecto viene blanco) */
+.maplibregl-popup-content {
   @apply bg-panel-raised text-slate-100 rounded-lg shadow-xl border border-panel-border p-0;
 }
-.mapboxgl-popup-tip {
+.maplibregl-popup-tip {
   border-top-color: #1b232d !important;
 }
-.mapboxgl-ctrl-group {
+.maplibregl-ctrl-group {
   @apply !bg-panel-raised;
 }
 

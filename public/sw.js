@@ -27,9 +27,9 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
-  // Nunca cachear llamadas a Supabase ni a Mapbox: siempre red (o falla,
-  // y ahí la app misma decide qué hacer offline).
-if (
+  // Nunca cachear llamadas a Supabase ni al tile server del mapa: siempre
+  // red (o falla, y ahí la app misma decide qué hacer offline).
+  if (
     request.url.includes("supabase.co") ||
     request.url.includes("openfreemap.org")
   ) {

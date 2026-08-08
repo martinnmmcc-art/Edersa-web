@@ -6,7 +6,7 @@ import { FilterBar } from "@/components/Panel/FilterBar";
 import { EventPanel } from "@/components/Panel/EventPanel";
 import { SyncStatus } from "@/components/UI/SyncStatus";
 import { IdentificacionOperario } from "@/components/UI/IdentificacionOperario";
-import { TransformadorForm } from "@/components/Transformadores/TransformadorForm";
+import { ElementoForm } from "@/components/Transformadores/ElementoForm";
 import { useElementosEstado } from "@/hooks/useElementosEstado";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { useUsuarioLocal } from "@/hooks/useUsuarioLocal";
@@ -34,12 +34,12 @@ export default function MapaPage() {
   const [elementoSeleccionado, setElementoSeleccionado] =
     useState<ElementoEstado | null>(null);
 
-  const [modoAltaTransformador, setModoAltaTransformador] = useState(false);
-  const [ubicacionNuevoTransformador, setUbicacionNuevoTransformador] = useState<{
+  const [modoAltaElemento, setModoAltaElemento] = useState(false);
+  const [ubicacionNuevoElemento, setUbicacionNuevoElemento] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
-  const [mostrarFormTransformador, setMostrarFormTransformador] = useState(false);
+  const [mostrarFormElemento, setMostrarFormElemento] = useState(false);
 
   useEffect(() => {
     obtenerAlimentadores()
@@ -68,10 +68,10 @@ export default function MapaPage() {
   }
 
   function handleClickMapa(coords: { lat: number; lng: number }) {
-    if (!modoAltaTransformador) return;
-    setUbicacionNuevoTransformador(coords);
-    setMostrarFormTransformador(true);
-    setModoAltaTransformador(false);
+    if (!modoAltaElemento) return;
+    setUbicacionNuevoElemento(coords);
+    setMostrarFormElemento(true);
+    setModoAltaElemento(false);
   }
 
   if (!cargado) return null; // evita parpadeo mientras se lee localStorage
@@ -103,16 +103,16 @@ export default function MapaPage() {
         </div>
       )}
 
-      {/* Botón flotante: alta de transformador */}
+      {/* Botón flotante: alta de elemento (cualquiera de los 4 tipos) */}
       <button
-        onClick={() => setModoAltaTransformador((v) => !v)}
+        onClick={() => setModoAltaElemento((v) => !v)}
         className={`fixed bottom-4 left-4 z-20 h-touch px-4 rounded-full font-semibold shadow-lg transition ${
-          modoAltaTransformador
+          modoAltaElemento
             ? "bg-acento text-panel"
             : "bg-panel-raised border border-panel-border text-slate-200"
         }`}
       >
-        {modoAltaTransformador ? "Tocá el mapa…" : "+ Transformador"}
+        {modoAltaElemento ? "Tocá el mapa…" : "+ Elemento"}
       </button>
 
       <SyncStatus online={online} pendientes={pendientes} sincronizando={sincronizando} />
@@ -121,18 +121,19 @@ export default function MapaPage() {
         <EventPanel
           elemento={elementoSeleccionado}
           usuario={usuario}
+          alimentadores={alimentadores}
           onCerrarPanel={() => setElementoSeleccionado(null)}
           onEventoRegistrado={() => recargar()}
         />
       )}
 
-      {mostrarFormTransformador && (
-        <TransformadorForm
+      {mostrarFormElemento && (
+        <ElementoForm
           alimentadores={alimentadores}
-          ubicacionPreseleccionada={ubicacionNuevoTransformador}
+          ubicacionPreseleccionada={ubicacionNuevoElemento}
           onCerrar={() => {
-            setMostrarFormTransformador(false);
-            setUbicacionNuevoTransformador(null);
+            setMostrarFormElemento(false);
+            setUbicacionNuevoElemento(null);
           }}
           onCreado={() => recargar()}
         />

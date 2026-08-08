@@ -1,12 +1,21 @@
 export type TipoElemento =
   | "reconectador"
   | "seccionador"
+  | "cuchilla"
   | "omnirouter"
-  | "transformador";
+  | "transformador"
+  | "capacitor"
+  | "central_termica"
+  | "barra"
+  | "generador";
 
 export type TipoEvento = "apertura" | "cierre" | "falla" | "reposicion";
 
 export type EstadoElemento = "cerrado" | "abierto" | "desconocido";
+
+export type TensionSecundariaBT = "220" | "380" | "380/220";
+export type TipoCapacitor = "fijo" | "automatico";
+export type TipoMotor = "gas" | "diesel";
 
 export interface Alimentador {
   id: string;
@@ -40,7 +49,7 @@ export interface EventoInput {
   usuario: string;
   observaciones?: string;
   foto_url?: string;
-  fecha: string; // ISO string, generada en el momento del registro (aunque se sincronice después)
+  fecha: string;
 }
 
 export interface EventoPendiente extends EventoInput {
@@ -53,7 +62,7 @@ export interface Transformador {
   elemento_id: string;
   potencia_kva: number;
   tension_primaria_kv: number;
-  tension_secundaria_kv: number;
+  tension_secundaria_v: TensionSecundariaBT;
   fases: 1 | 3;
   fabricante?: string | null;
   numero_serie?: string | null;
@@ -67,10 +76,46 @@ export interface NuevoTransformadorInput {
   lng: number;
   potencia_kva: number;
   tension_primaria_kv: number;
-  tension_secundaria_kv: number;
+  tension_secundaria_v: TensionSecundariaBT;
   fases: 1 | 3;
   fabricante?: string;
   numero_serie?: string;
+}
+
+export interface Capacitor {
+  id: string;
+  elemento_id: string;
+  potencia_kvar: number;
+  tension_kv: number;
+  tipo: TipoCapacitor;
+}
+
+export interface NuevoCapacitorInput {
+  nombre: string;
+  alimentador_id: string | null;
+  lat: number;
+  lng: number;
+  potencia_kvar: number;
+  tension_kv: number;
+  tipo: TipoCapacitor;
+}
+
+export interface Generador {
+  id: string;
+  elemento_id: string;
+  tipo_motor: TipoMotor;
+  potencia_kva: number;
+  tension_salida_kv: number;
+}
+
+export interface NuevoGeneradorInput {
+  nombre: string;
+  alimentador_id: string | null;
+  lat: number;
+  lng: number;
+  tipo_motor: TipoMotor;
+  potencia_kva: number;
+  tension_salida_kv: number;
 }
 
 export interface NuevoElementoInput {
@@ -87,3 +132,5 @@ export interface ActualizarElementoInput {
   nombre: string;
   alimentador_id: string | null;
 }
+
+export type ModoMapa = "calles" | "satelite" | "hibrida" | "topografico";

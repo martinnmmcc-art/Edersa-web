@@ -2,12 +2,17 @@
 
 import { useState } from "react";
 import { registrarEvento } from "@/services/eventosService";
+import {
+  actualizarElemento,
+  darDeBajaElemento,
+} from "@/services/elementosService";
 import { COLOR_ESTADO, LABEL_ESTADO, LABEL_TIPO } from "@/lib/estado";
-import type { ElementoEstado } from "@/types";
+import type { Alimentador, ElementoEstado } from "@/types";
 
 interface EventPanelProps {
   elemento: ElementoEstado;
   usuario: string;
+  alimentadores: Alimentador[];
   onCerrarPanel: () => void;
   onEventoRegistrado: (offline: boolean) => void;
 }
@@ -15,10 +20,14 @@ interface EventPanelProps {
 export function EventPanel({
   elemento,
   usuario,
+  alimentadores,
   onCerrarPanel,
   onEventoRegistrado,
 }: EventPanelProps) {
   const [enviando, setEnviando] = useState<"apertura" | "cierre" | null>(null);
+  const [editando, setEditando] = useState(false);
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+  const [confirmandoBaja, setConfirmandoBaja] = useState(false);
 
   async function handleRegistrar(tipo: "apertura" | "cierre") {
     setEnviando(tipo);
@@ -33,6 +42,125 @@ export function EventPanel({
     } finally {
       setEnviando(null);
     }
+  }
+
+  async function handleGuardarEdicion(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const nombre = String(form.get("nombre") || "").trim();
+    const alimentador_id = (form.get("alimentador_id") as string) || null;
+    if (nombre.length < 2) return;
+
+    setGuardandoEdicion(true);
+    try {
+      await actualizarElemento(elemento.id, { nombre, alimentador_id });
+      onEventoRegistrado(false); // reutiliza el mismo refresh que un evento
+      onCerrarPanel();
+    } finally {
+      setGuardandoEdicion(false);
+    }
+  }
+
+  async function handleDarDeBaja() {
+    setGuardandoEdicion(true);
+    try {
+      await darDeBajaElemento(elemento.id);
+      onEventoRegistrado(false);
+      onCerrarPanel();
+    } finally {
+      setGuardandoEdicion(false);
+    }
+  }
+
+  if (editando) {
+    return (
+      <div
+        className="fixed inset-x-0 bottom-0 z-30 bg-panel-raised border-t border-panel-border rounded-t-2xl shadow-2xl"
+        role="dialog"
+        aria-label={`Editar ${elemento.nombre}`}
+      >
+        <form onSubmit={handleGuardarEdicion} className="max-w-lg mx-auto p-4 pb-6 flex flex-col gap-3">
+          <h2 className="font-display text-2xl leading-tight">Editar elemento</h2>
+
+          <label className="flex flex-col gap-1 text-sm text-slate-300">
+            Nombre / identificador
+            <input
+              name="nombre"
+              required
+              defaultValue={elemento.nombre}
+              className="campo-input"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm text-slate-300">
+            Alimentador
+            <select
+              name="alimentador_id"
+              defaultValue={elemento.alimentador_id ?? ""}
+              className="campo-input"
+            >
+              <option value="">Sin asignar</option>
+              {alimentadores.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.nombre} ({a.tension_kv}kV)
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="flex gap-3 mt-1">
+            <button
+              type="button"
+              onClick={() => setEditando(false)}
+              className="flex-1 h-touch rounded-xl border border-panel-border text-slate-300"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={guardandoEdicion}
+              className="flex-1 h-touch rounded-xl bg-acento text-panel font-semibold disabled:opacity-50"
+            >
+              {guardandoEdicion ? "Guardando…" : "Guardar"}
+            </button>
+          </div>
+
+          {!confirmandoBaja ? (
+            <button
+              type="button"
+              onClick={() => setConfirmandoBaja(true)}
+              className="h-touch rounded-xl border border-estado-abierto text-estado-abierto text-sm mt-1"
+            >
+              Dar de baja este elemento
+            </button>
+          ) : (
+            <div className="border border-estado-abierto rounded-xl p-3 mt-1">
+              <p className="text-sm text-slate-200 mb-2">
+                Deja de verse en el mapa, pero se conserva su historial de
+                eventos. ¿Confirmás?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmandoBaja(false)}
+                  className="flex-1 h-touch rounded-lg border border-panel-border text-slate-300 text-sm"
+                >
+                  No
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDarDeBaja}
+                  disabled={guardandoEdicion}
+                  className="flex-1 h-touch rounded-lg bg-estado-abierto text-white text-sm disabled:opacity-50"
+                >
+                  Sí, dar de baja
+                </button>
+              </div>
+            </div>
+          )}
+        </form>
+      </div>
+    );
   }
 
   return (
@@ -81,6 +209,13 @@ export function EventPanel({
             {enviando === "cierre" ? "Guardando…" : "CERRAR"}
           </button>
         </div>
+
+        <button
+          onClick={() => setEditando(true)}
+          className="w-full h-touch mt-3 rounded-xl border border-panel-border text-slate-300 text-sm"
+        >
+          Editar nombre / alimentador
+        </button>
 
         <p className="text-xs text-slate-500 mt-3 text-center">
           Operario: {usuario}

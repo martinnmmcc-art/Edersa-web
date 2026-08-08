@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import { useMap } from "@/hooks/useMap";
 import { crearMarcadorEl } from "./crearMarcadorEl";
+import { SelectorEstiloMapa } from "./SelectorEstiloMapa";
 import type { ElementoEstado } from "@/types";
 
 interface MapViewProps {
@@ -21,7 +22,9 @@ export function MapView({
   onSeleccionarElemento,
   onClickMapa,
 }: MapViewProps) {
-  const { map, mapListo, errorMapa } = useMap({ containerId: CONTAINER_ID });
+  const { map, mapListo, errorMapa, modoMapa, cambiarModoMapa } = useMap({
+    containerId: CONTAINER_ID,
+  });
   const marcadoresRef = useRef<Map<string, maplibregl.Marker>>(new Map());
 
   useEffect(() => {
@@ -88,6 +91,11 @@ export function MapView({
   return (
     <div className="relative w-full h-full">
       <div id={CONTAINER_ID} className="w-full h-full" />
+
+      {mapListo && (
+        <SelectorEstiloMapa modoActual={modoMapa} onCambiar={cambiarModoMapa} />
+      )}
+
       {errorMapa && (
         <div className="absolute inset-x-4 top-4 bg-red-900/90 border border-red-500 text-red-100 rounded-lg p-3 text-sm">
           {errorMapa}

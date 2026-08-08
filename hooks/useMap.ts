@@ -2,17 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
+import { obtenerEstiloMapa } from "@/lib/mapStyles";
+import type { ModoMapa } from "@/types";
 
 // Centro por defecto: El Bolsón, Río Negro, Argentina
 const EL_BOLSON_CENTER: [number, number] = [-71.5321, -41.9622];
 const DEFAULT_ZOOM = 13;
-
-// OpenFreeMap: estilos de mapa vectorial gratuitos, sin token ni límite de
-// uso (https://openfreemap.org). "Liberty" es un estilo tipo calle, buena
-// legibilidad. Si en algún momento se quiere autohospedar el tile server
-// (por control total / uso muy intensivo), OpenFreeMap también permite
-// bajar los tiles y correrlos propios sin cambiar el resto del código.
-const ESTILO_MAPA = "https://tiles.openfreemap.org/styles/liberty";
 
 interface UseMapOptions {
   containerId: string;
@@ -20,12 +15,6 @@ interface UseMapOptions {
   zoom?: number;
 }
 
-/**
- * Hook responsable únicamente del ciclo de vida del mapa (MapLibre GL):
- * lo crea, lo destruye al desmontar, y expone `map` cuando está listo.
- * No sabe nada de elementos ni de estado eléctrico: eso vive en los
- * componentes que consumen `map`.
- */
 export function useMap({
   containerId,
   center = EL_BOLSON_CENTER,
@@ -34,6 +23,7 @@ export function useMap({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [mapListo, setMapListo] = useState(false);
   const [errorMapa, setErrorMapa] = useState<string | null>(null);
+  const [modoMapa, setModoMapaState] = useState<ModoMapa>("calles");
 
   useEffect(() => {
     const el = document.getElementById(containerId);
@@ -43,7 +33,7 @@ export function useMap({
     try {
       map = new maplibregl.Map({
         container: containerId,
-        style: ESTILO_MAPA,
+        style: obtenerEstiloMapa("calles"),
         center,
         zoom,
       });
@@ -63,7 +53,6 @@ export function useMap({
 
     map.on("load", () => setMapListo(true));
     map.on("error", (e) => {
-      // errores de tile server / red se reportan acá en vez de romper la UI
       // eslint-disable-next-line no-console
       console.error("[mapa] error", e?.error ?? e);
     });
@@ -78,5 +67,16 @@ export function useMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [containerId]);
 
-  return { map: mapRef.current, mapListo, errorMapa };
+  function cambiarModoMapa(modo: ModoMapa) {
+    const map = mapRef.current;
+    if (!map) return;
+    // setStyle reemplaza capas/fuentes del mapa base, pero NO afecta a los
+    // maplibregl.Marker (son elementos DOM propios, no capas del estilo),
+    // así que los marcadores de elementos sobreviven al cambio sin
+    // necesidad de recrearlos.
+    map.setStyle(obtenerEstiloMapa(modo));
+    setModoMapaState(modo);
+  }
+
+  return { map: mapRef.current, mapListo, errorMapa, modoMapa, cambiarModoMapa };
 }

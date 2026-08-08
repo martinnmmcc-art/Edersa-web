@@ -41,6 +41,11 @@ export function suscribirseAEventos(onCambio: () => void) {
       { event: "INSERT", schema: "public", table: "elementos" },
       () => onCambio()
     )
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "elementos" },
+      () => onCambio()
+    )
     .subscribe();
 
   return () => {
@@ -64,4 +69,21 @@ export async function crearElemento(input: {
 
   if (error) throw error;
   return data;
+}
+
+export async function actualizarElemento(
+  id: string,
+  cambios: { nombre?: string; alimentador_id?: string | null }
+) {
+  const { error } = await supabase.from("elementos").update(cambios).eq("id", id);
+  if (error) throw error;
+}
+
+/** Baja lógica: el elemento deja de listarse pero su histórico de eventos se conserva. */
+export async function darDeBajaElemento(id: string) {
+  const { error } = await supabase
+    .from("elementos")
+    .update({ activo: false })
+    .eq("id", id);
+  if (error) throw error;
 }

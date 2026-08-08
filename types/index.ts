@@ -72,3 +72,18 @@ export interface NuevoTransformadorInput {
   fabricante?: string;
   numero_serie?: string;
 }
+
+export interface NuevoElementoInput {
+  nombre: string;
+  tipo: TipoElemento;
+  alimentador_id: string | null;
+  lat: number;
+  lng: number;
+  codigo?: string;
+}
+
+export interface ActualizarElementoInput {
+  id: string;
+  nombre: string;
+  alimentador_id: string | null;
+}
